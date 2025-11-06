@@ -21,15 +21,9 @@ This is a **custom Home Assistant integration** that connects to the [OpenAQ API
 
 ## 🧩 Installation
 
-### Option 1 — via HACS (recommended)
-1. In Home Assistant, open **HACS → Integrations → Custom repositories**  
-2. Add this repository URL:  
-   ```
-   https://github.com/zenguru84/ha-openaq
-   ```
-   as type **Integration**  
-3. Search for **OpenAQ** and click **Install**  
-4. Restart Home Assistant
+### Option 1 — One-click installation from HACS (recommended)
+
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=zenguru84&repository=ha-openaq&category=integration)
 
 ### Option 2 — manual installation
 1. Copy the folder `custom_components/openaq` into your Home Assistant config directory:  
