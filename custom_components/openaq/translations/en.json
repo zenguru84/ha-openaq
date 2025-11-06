@@ -1,0 +1,50 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "OpenAQ Air Quality",
+                "description": "Enter your OpenAQ API key below. You can generate one for free at [openaq.org](https://docs.openaq.org/).",
+                "data": {
+                    "api_key": "API Key"
+                }
+            },
+            "station": {
+                "title": "Add Station",
+                "description": "Enter a **Station ID** from OpenAQ (e.g., `2163078`).",
+                "data": {
+                    "location_id": "Station ID"
+                }
+            }
+        },
+        "error": {
+            "single_instance_allowed": "Only one OpenAQ account can be added.",
+            "invalid_auth": "The API key is invalid. Please check it and try again.",
+            "cannot_connect": "Unable to connect to the OpenAQ API. Check your internet connection or try again later.",
+            "already_configured": "This station is already configured.",
+            "max_entries_reached": "Maximum number of stations reached (3).",
+            "not_found": "Station not found.",
+            "required": "Please enter a Station ID."
+        },
+        "abort": {
+            "single_instance_allowed": "Only one OpenAQ configuration is allowed."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Manage OpenAQ Stations",
+                "description": "You can add up to 3 monitoring stations using the same API key.\n\nEnter the **Station ID** from OpenAQ (e.g., `2163078`).",
+                "data": {
+                    "add_location_id": "Station ID"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Could not connect to OpenAQ API.",
+            "already_configured": "This station is already configured.",
+            "max_entries_reached": "Maximum number of stations reached (3).",
+            "not_found": "Station not found.",
+            "required": "Please enter a Station ID."
+        }
+    }
+}

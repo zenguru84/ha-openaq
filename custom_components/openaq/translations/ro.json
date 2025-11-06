@@ -1,0 +1,50 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "OpenAQ Calitatea Aerului",
+                "description": "Introdu cheia ta API OpenAQ mai jos. Poți genera una gratuit pe [openaq.org](https://docs.openaq.org/).",
+                "data": {
+                    "api_key": "Cheie API"
+                }
+            },
+            "station": {
+                "title": "Adaugă stație",
+                "description": "Introdu un **ID de stație** OpenAQ (ex: `2163078`).",
+                "data": {
+                    "location_id": "ID stație"
+                }
+            }
+        },
+        "error": {
+            "single_instance_allowed": "Poți adăuga o singură configurație OpenAQ.",
+            "invalid_auth": "Cheia API este invalidă. Verifică și încearcă din nou.",
+            "cannot_connect": "Nu se poate conecta la API-ul OpenAQ. Verifică conexiunea la internet sau încearcă mai târziu.",
+            "already_configured": "Această stație este deja adăugată.",
+            "max_entries_reached": "Ai atins numărul maxim de stații (3).",
+            "not_found": "Stația nu a fost găsită.",
+            "required": "Introdu un ID de stație."
+        },
+        "abort": {
+            "single_instance_allowed": "Poți adăuga doar o configurație OpenAQ."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Gestionează stațiile OpenAQ",
+                "description": "Poți adăuga până la 3 stații de monitorizare folosind aceeași cheie API.\n\nIntrodu **ID-ul stației** din OpenAQ (ex: `2163078`).",
+                "data": {
+                    "add_location_id": "ID stație"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Nu s-a putut conecta la API-ul OpenAQ.",
+            "already_configured": "Această stație este deja configurată.",
+            "max_entries_reached": "Ai atins numărul maxim de stații (3).",
+            "not_found": "Stația nu a fost găsită.",
+            "required": "Introdu un ID de stație."
+        }
+    }
+}
