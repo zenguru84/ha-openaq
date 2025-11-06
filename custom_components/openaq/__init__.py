@@ -10,10 +10,6 @@ DOMAIN = "openaq"
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenAQ from a config entry."""
     hass.data.setdefault(DOMAIN, {})
