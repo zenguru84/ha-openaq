@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
         unsub = async_track_time_interval(
             hass,
-            lambda now: hass.async_create_task(coordinator_latest.async_request_refresh()),
+            lambda now: hass.add_job(coordinator_latest.async_request_refresh),
             SCAN_INTERVAL_LATEST,
         )
         entry.async_on_unload(unsub)
