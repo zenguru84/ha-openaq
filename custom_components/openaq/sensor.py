@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -128,6 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             update_method=lambda u=url_meta: _fetch_json(session, u, headers),
             update_interval=SCAN_INTERVAL_META,
         )
+
         coordinator_latest = DataUpdateCoordinator(
             hass,
             _LOGGER,
@@ -141,13 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
         meta_root = _meta_root(coordinator_meta.data)
         location_name = meta_root.get("name") or f"Station {location_id}"
-
-        unsub = async_track_time_interval(
-            hass,
-            lambda now: hass.async_create_task(coordinator_latest.async_request_refresh()),
-            SCAN_INTERVAL_LATEST,
-        )
-        entry.async_on_unload(unsub)
 
         wanted_params = [
             ("pm1",  "PM1",   SensorDeviceClass.PM1,   CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
