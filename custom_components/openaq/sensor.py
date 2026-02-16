@@ -1,7 +1,6 @@
 from __future__ import annotations
+
 import logging
-from datetime import timedelta
-import async_timeout
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
@@ -9,40 +8,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 )
-from .__init__ import DOMAIN
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL_META = timedelta(hours=12)
-SCAN_INTERVAL_LATEST = timedelta(minutes=5)  
-
-
-# ----------------- helpers HTTP -----------------
-async def _fetch_json(session, url: str, headers: dict):
-    try:
-        async with async_timeout.timeout(15):
-            resp = await session.get(url, headers=headers)
-            resp.raise_for_status()
-            return await resp.json()
-    except Exception as err:
-        raise UpdateFailed(f"Error fetching {url}: {err}") from err
-
-
-def _meta_root(meta_data: dict) -> dict:
-    if not meta_data:
-        return {}
-    results = meta_data.get("results", [])
-    return results[0] if results else {}
 
 
 def _find_sensor_id(meta_root: dict, pname: str):
@@ -75,12 +49,18 @@ def _aqi_us_from_pm25(pm25):
     if pm25 is None:
         return None
     x = float(pm25)
-    if x <= 12.0:   return (50-0)/(12.0-0.0)*(x-0.0)+0
-    if x <= 35.4:   return (100-51)/(35.4-12.1)*(x-12.1)+51
-    if x <= 55.4:   return (150-101)/(55.4-35.5)*(x-35.5)+101
-    if x <= 150.4:  return (200-151)/(150.4-55.5)*(x-55.5)+151
-    if x <= 250.4:  return (300-201)/(250.4-150.5)*(x-150.5)+201
-    if x <= 500.4:  return (500-301)/(500.4-250.5)*(x-250.5)+301
+    if x <= 12.0:
+        return (50 - 0) / (12.0 - 0.0) * (x - 0.0) + 0
+    if x <= 35.4:
+        return (100 - 51) / (35.4 - 12.1) * (x - 12.1) + 51
+    if x <= 55.4:
+        return (150 - 101) / (55.4 - 35.5) * (x - 35.5) + 101
+    if x <= 150.4:
+        return (200 - 151) / (150.4 - 55.5) * (x - 55.5) + 151
+    if x <= 250.4:
+        return (300 - 201) / (250.4 - 150.5) * (x - 150.5) + 201
+    if x <= 500.4:
+        return (500 - 301) / (500.4 - 250.5) * (x - 250.5) + 301
     return 500.0
 
 
@@ -88,70 +68,65 @@ def _aqi_us_from_pm10(pm10):
     if pm10 is None:
         return None
     x = float(pm10)
-    if x <= 54:   return (50-0)/(54-0)*(x-0)+0
-    if x <= 154:  return (100-51)/(154-55)*(x-55)+51
-    if x <= 254:  return (150-101)/(254-155)*(x-155)+101
-    if x <= 354:  return (200-151)/(354-255)*(x-255)+151
-    if x <= 424:  return (300-201)/(424-355)*(x-355)+201
-    if x <= 604:  return (500-301)/(604-425)*(x-425)+301
+    if x <= 54:
+        return (50 - 0) / (54 - 0) * (x - 0) + 0
+    if x <= 154:
+        return (100 - 51) / (154 - 55) * (x - 55) + 51
+    if x <= 254:
+        return (150 - 101) / (254 - 155) * (x - 155) + 101
+    if x <= 354:
+        return (200 - 151) / (354 - 255) * (x - 255) + 151
+    if x <= 424:
+        return (300 - 201) / (424 - 355) * (x - 355) + 201
+    if x <= 604:
+        return (500 - 301) / (604 - 425) * (x - 425) + 301
     return 500.0
 
 
 def _aqi_level_text(v: int | None) -> str | None:
     if v is None:
         return None
-    if v <= 50: return "Good"
-    if v <= 100: return "Moderate"
-    if v <= 150: return "Unhealthy for Sensitive Groups"
-    if v <= 200: return "Unhealthy"
-    if v <= 300: return "Very Unhealthy"
+    if v <= 50:
+        return "Good"
+    if v <= 100:
+        return "Moderate"
+    if v <= 150:
+        return "Unhealthy for Sensitive Groups"
+    if v <= 200:
+        return "Unhealthy"
+    if v <= 300:
+        return "Very Unhealthy"
     return "Hazardous"
 
 
 # ----------------- setup entry -----------------
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
-    api_key: str = entry.data["api_key"]
-    stations: list[str] = list(entry.options.get("stations", []))
-    session = async_get_clientsession(hass)
-    headers = {"X-API-Key": api_key, "Accept": "application/json"}
+    """Create entities for all configured stations.
+
+    NOTE:
+    - Coordinators are created and first-refreshed in __init__.py
+    - This platform must NOT raise ConfigEntryError/NotReady (HA 2026.x requirement)
+    """
+    data = hass.data[DOMAIN][entry.entry_id]
+    stations_data: dict[str, dict] = data.get("stations", {})
+
     all_entities: list[SensorEntity] = []
 
-    for location_id in stations:
-        url_meta = f"https://api.openaq.org/v3/locations/{location_id}"
-        url_latest = f"https://api.openaq.org/v3/locations/{location_id}/latest"
-
-        coordinator_meta = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"OpenAQ Meta {location_id}",
-            update_method=lambda u=url_meta: _fetch_json(session, u, headers),
-            update_interval=SCAN_INTERVAL_META,
-        )
-
-        coordinator_latest = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"OpenAQ Latest {location_id}",
-            update_method=lambda u=url_latest: _fetch_json(session, u, headers),
-            update_interval=SCAN_INTERVAL_LATEST,
-        )
-
-        await coordinator_meta.async_config_entry_first_refresh()
-        await coordinator_latest.async_config_entry_first_refresh()
-
-        meta_root = _meta_root(coordinator_meta.data)
-        location_name = meta_root.get("name") or f"Station {location_id}"
+    for location_id, info in stations_data.items():
+        coordinator_latest = info["coordinator_latest"]
+        meta_root = info["meta_root"]
+        location_name = info["location_name"]
 
         wanted_params = [
-            ("pm1",  "PM1",   SensorDeviceClass.PM1,   CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("pm25", "PM2.5", SensorDeviceClass.PM25,  CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("pm10", "PM10",  SensorDeviceClass.PM10,  CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("co2",  "CO₂",   SensorDeviceClass.CO2,  CONCENTRATION_PARTS_PER_MILLION),
-            ("co",   "CO",    SensorDeviceClass.CO, CONCENTRATION_PARTS_PER_MILLION),
-            ("no2",  "NO₂",   SensorDeviceClass.NITROGEN_DIOXIDE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("o3",   "O₃",    SensorDeviceClass.OZONE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("so2",  "SO₂",   SensorDeviceClass.SULPHUR_DIOXIDE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("um003","PM0.3 Count", None, None),
+            ("pm1", "PM1", SensorDeviceClass.PM1, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+            ("pm25", "PM2.5", SensorDeviceClass.PM25, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+            ("pm10", "PM10", SensorDeviceClass.PM10, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+            ("co2", "CO₂", SensorDeviceClass.CO2, CONCENTRATION_PARTS_PER_MILLION),
+            ("co", "CO", SensorDeviceClass.CO, CONCENTRATION_PARTS_PER_MILLION),
+            ("no2", "NO₂", SensorDeviceClass.NITROGEN_DIOXIDE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+            ("o3", "O₃", SensorDeviceClass.OZONE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+            ("so2", "SO₂", SensorDeviceClass.SULPHUR_DIOXIDE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+            ("um003", "PM0.3 Count", None, None),
         ]
 
         sids: dict[str, int | None] = {}
@@ -160,7 +135,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             sids[pname] = sid
             if sid is None:
                 continue
+
             precision = 0 if unit == CONCENTRATION_PARTS_PER_MILLION else 2
+
             all_entities.append(
                 OpenAQParamSensor(
                     entry=entry,
@@ -176,11 +153,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 )
             )
 
-        all_entities.extend([
-            OpenAQAQUSValue(entry, coordinator_latest, location_id, location_name, sids.get("pm25"), sids.get("pm10")),
-            OpenAQAQUSMainPollutant(entry, coordinator_latest, location_id, location_name, sids.get("pm25"), sids.get("pm10")),
-            OpenAQAQUSLevel(entry, coordinator_latest, location_id, location_name, sids.get("pm25"), sids.get("pm10")),
-        ])
+        all_entities.extend(
+            [
+                OpenAQAQUSValue(entry, coordinator_latest, location_id, location_name, sids.get("pm25"), sids.get("pm10")),
+                OpenAQAQUSMainPollutant(entry, coordinator_latest, location_id, location_name, sids.get("pm25"), sids.get("pm10")),
+                OpenAQAQUSLevel(entry, coordinator_latest, location_id, location_name, sids.get("pm25"), sids.get("pm10")),
+            ]
+        )
 
     async_add_entities(all_entities)
 
@@ -209,8 +188,16 @@ class OpenAQBaseEntity(CoordinatorEntity, SensorEntity):
 class OpenAQParamSensor(OpenAQBaseEntity):
     def __init__(
         self,
-        entry, coordinator, location_id, location_name,
-        parameter_name, title, sensor_id, device_class, unit, precision=2,
+        entry,
+        coordinator,
+        location_id,
+        location_name,
+        parameter_name,
+        title,
+        sensor_id,
+        device_class,
+        unit,
+        precision=2,
     ):
         super().__init__(entry, coordinator, location_id, location_name)
         self._parameter_name = parameter_name
