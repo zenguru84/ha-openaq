@@ -34,7 +34,14 @@ class OpenAQConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_station()
 
         schema = vol.Schema({vol.Required("api_key"): str})
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user", 
+            data_schema=schema, 
+            errors=errors,
+            description_placeholders={
+                "docs_url": "https://docs.openaq.org/"
+            },
+        )
 
     async def async_step_station(self, user_input=None):
         errors = {}

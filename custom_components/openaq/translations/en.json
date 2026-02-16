@@ -3,7 +3,7 @@
         "step": {
             "user": {
                 "title": "OpenAQ Air Quality",
-                "description": "Enter your OpenAQ API key below. You can generate one for free at [openaq.org](https://docs.openaq.org/).",
+                "description": "Enter your OpenAQ API key below. You can generate one for free at {docs_url}.",
                 "data": {
                     "api_key": "API Key"
                 }

@@ -3,7 +3,7 @@
         "step": {
             "user": {
                 "title": "OpenAQ Calitatea Aerului",
-                "description": "Introdu cheia ta API OpenAQ mai jos. Poți genera una gratuit pe [openaq.org](https://docs.openaq.org/).",
+                "description": "Introdu cheia ta API OpenAQ mai jos. Poți genera una gratuit pe {docs_url}.",
                 "data": {
                     "api_key": "Cheie API"
                 }
