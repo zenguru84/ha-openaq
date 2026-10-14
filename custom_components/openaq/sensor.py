@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    UnitOfRatio,
+    UnitOfDensity,
 )
 
 from .const import DOMAIN
@@ -118,14 +118,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         location_name = info["location_name"]
 
         wanted_params = [
-            ("pm1", "PM1", SensorDeviceClass.PM1, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("pm25", "PM2.5", SensorDeviceClass.PM25, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("pm10", "PM10", SensorDeviceClass.PM10, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("co2", "CO₂", SensorDeviceClass.CO2, CONCENTRATION_PARTS_PER_MILLION),
-            ("co", "CO", SensorDeviceClass.CO, CONCENTRATION_PARTS_PER_MILLION),
-            ("no2", "NO₂", SensorDeviceClass.NITROGEN_DIOXIDE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("o3", "O₃", SensorDeviceClass.OZONE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-            ("so2", "SO₂", SensorDeviceClass.SULPHUR_DIOXIDE, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+            ("pm1", "PM1", SensorDeviceClass.PM1, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER),
+            ("pm25", "PM2.5", SensorDeviceClass.PM25, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER),
+            ("pm10", "PM10", SensorDeviceClass.PM10, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER),
+            ("co2", "CO₂", SensorDeviceClass.CO2, UnitOfRatio.PARTS_PER_MILLION),
+            ("co", "CO", SensorDeviceClass.CO, UnitOfRatio.PARTS_PER_MILLION),
+            ("no2", "NO₂", SensorDeviceClass.NITROGEN_DIOXIDE, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER),
+            ("o3", "O₃", SensorDeviceClass.OZONE, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER),
+            ("so2", "SO₂", SensorDeviceClass.SULPHUR_DIOXIDE, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER),
             ("um003", "PM0.3 Count", None, None),
         ]
 
@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             if sid is None:
                 continue
 
-            precision = 0 if unit == CONCENTRATION_PARTS_PER_MILLION else 2
+            precision = 0 if unit == UnitOfRatio.PARTS_PER_MILLION else 2
 
             all_entities.append(
                 OpenAQParamSensor(
