@@ -7,6 +7,6 @@
 	"documentation": "https://github.com/zenguru84/ha-openaq",
 	"iot_class": "cloud_polling",
 	"issue_tracker": "https://github.com/zenguru84/ha-openaq/issues",
-	"requirements": ["aiohttp"],
-	"version": "0.1.5"
+	"requirements": [],
+	"version": "0.1.6"
 }
