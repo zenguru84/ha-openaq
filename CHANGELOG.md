@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.6
+- Fix hassfest validation by removing aiohttp from manifest requirements; Home Assistant already provides it.
+
 ## 0.1.5
 - Replace deprecated concentration constants with UnitOfRatio and UnitOfDensity (PR #5, fixes #4).
 - Require Home Assistant 2026.7.0 or newer.
