@@ -1,5 +1,7 @@
 # 🌍 OpenAQ Integration for Home Assistant
 
+Requires **Home Assistant 2026.7.0 or newer**.
+
 <img src="https://user-images.githubusercontent.com/8487728/230648638-35060664-46ef-4d75-9d37-f10dd683b737.png" alt="OpenAQ Logo" width="160"/>
 
 This is a **custom Home Assistant integration** that connects to the [OpenAQ API](https://openaq.org) to provide **real-time air quality data** from thousands of monitoring stations worldwide.
